@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>區域網路任務協作平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #fafafa;
+        }
+        .font-mono {
+            font-family: 'Fira Code', monospace;
+        }
+    </style>
+</head>
+<body class="text-gray-800 min-h-screen flex flex-col justify-between">
+
+    <header class="bg-white border-b border-gray-100 py-4 px-6 shadow-sm">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2.5">
+                <div class="bg-indigo-600 p-2 rounded-lg shadow-sm">
+                    <i class="fa-solid fa-network-wired text-sm text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-md font-bold tracking-wide text-gray-950">區域網路任務協作平台</h1>
+                    <p class="text-[10px] text-gray-400">實時同步待辦看板與並行認領鎖定防護</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 text-[11px] text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full border border-gray-200 font-medium">
+                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                Notion 雲端數據橋接已就緒
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-5xl w-full mx-auto p-4 md:p-6 space-y-6">
+        
+        <div class="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+            <h2 class="text-xs font-bold text-gray-800 mb-4 flex items-center gap-1.5 uppercase tracking-wider">
+                <span class="w-1 h-3.5 bg-indigo-600 rounded-sm"></span> 快速建立新任務
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div>
+                    <label class="block text-[11px] text-gray-400 mb-1">專案名稱</label>
+                    <input id="new-task-project" type="text" value="輸入專案名稱" class="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-indigo-500 text-gray-800">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-gray-400 mb-1">優先權</label>
+                    <select id="new-task-priority" class="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-indigo-500 text-gray-800">
+                        <option value="High">高優先權 (High)</option>
+                        <option value="Medium" selected>中優先權 (Medium)</option>
+                        <option value="Low">低優先權 (Low)</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2 flex gap-2">
+                    <div class="flex-grow">
+                        <label class="block text-[11px] text-gray-400 mb-1">任務內容</label>
+                        <input id="new-task-title" type="text" placeholder="例如：優化資料庫讀寫交易安全鎖..." class="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-indigo-500 text-gray-800">
+                    </div>
+                    <button onclick="handleAddTask()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 h-9 rounded-lg transition-colors mt-auto shadow-sm active:scale-[0.98]">
+                        新增任務
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <h2 class="text-xs font-bold text-gray-800 mb-3.5 flex items-center gap-1.5 uppercase tracking-wider">
+                <span class="w-1 h-3.5 bg-indigo-600 rounded-sm"></span> 三大成員協作看板
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+                    <div class="bg-gray-50/60 px-4 py-2.5 border-b border-gray-100 font-bold text-xs text-gray-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-circle text-indigo-500 animate-pulse"></i> 林京緯
+                    </div>
+                    <div class="p-4 space-y-2.5 max-h-[250px] overflow-y-auto" id="tasks-container-lin1"></div>
+                </div>
+                <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+                    <div class="bg-gray-50/60 px-4 py-2.5 border-b border-gray-100 font-bold text-xs text-gray-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-circle text-indigo-500 animate-pulse"></i> 林宸煒
+                    </div>
+                    <div class="p-4 space-y-2.5 max-h-[250px] overflow-y-auto" id="tasks-container-lin2"></div>
+                </div>
+                <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+                    <div class="bg-gray-50/60 px-4 py-2.5 border-b border-gray-100 font-bold text-xs text-gray-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-circle text-indigo-500 animate-pulse"></i> 王祐宸
+                    </div>
+                    <div class="p-4 space-y-2.5 max-h-[250px] overflow-y-auto" id="tasks-container-wang"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+            <h2 class="text-xs font-bold text-gray-800 mb-4 flex items-center gap-1.5 uppercase tracking-wider">
+                <span class="w-1 h-3.5 bg-indigo-600 rounded-sm"></span> 本地 SQLite 資料記錄 (tasks)
+            </h2>
+            <div class="overflow-x-auto rounded-lg border border-gray-100 bg-white">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50/70 text-gray-400 uppercase font-mono border-b border-gray-100">
+                            <th class="p-3 font-semibold text-center w-24">task_id</th>
+                            <th class="p-3 font-semibold w-24">專案名稱</th>
+                            <th class="p-3 font-semibold">任務名稱</th>
+                            <th class="p-3 font-semibold text-center w-28">優先權 / 狀態</th>
+                            <th class="p-3 font-semibold w-28">目前認領人</th>
+                            <th class="p-3 font-semibold text-center w-20">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="db-table-body" class="divide-y divide-gray-100 text-gray-600 font-mono">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="conflict-modal" class="fixed inset-0 bg-gray-500/30 backdrop-blur-sm hidden items-center justify-center z-50 p-4 transition-all duration-200">
+        <div class="bg-white border border-gray-200 rounded-xl max-w-sm w-full p-5 shadow-lg scale-95 transform transition-all duration-200">
+            <div class="flex items-center gap-3 mb-3 text-amber-600">
+                <div class="bg-amber-50 p-1.5 rounded-lg border border-amber-100">
+                    <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-gray-900">任務已被搶先認領</h3>
+                    <p class="text-[9px] text-gray-400 font-mono">HTTP 409 Conflict</p>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 leading-relaxed mb-5">
+                該任務已被其他協作使用者登記寫入，後端 SQLite 交易鎖已自動駁回您的認領請求。
+            </p>
+            <div class="flex justify-end">
+                <button onclick="closeModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-4 py-1.5 rounded-lg text-[11px] font-semibold transition-colors">
+                    關閉並更新狀態
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-6 right-6 bg-gray-900 text-white px-3.5 py-2 rounded-lg font-bold text-[11px] shadow-sm flex items-center gap-1.5 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i> <span id="toast-msg">動作完成</span>
+    </div>
+
+    <footer class="bg-white border-t border-gray-100 py-3 text-center text-[10px] text-gray-400">
+        區域網路任務協作平台 © 2026. 保持穩定 Polling。
+    </footer>
+
+    <script>
+        const users = [
+            { containerId: 'tasks-container-lin1', name: '林京緯' },
+            { containerId: 'tasks-container-lin2', name: '林宸煒' },
+            { containerId: 'tasks-container-wang', name: '王祐宸' }
+        ];
+
+        async function handleAddTask() {
+            const project_name = document.getElementById("new-task-project").value.trim();
+            const priority = document.getElementById("new-task-priority").value;
+            const title = document.getElementById("new-task-title").value.trim();
+
+            if (!title) {
+                showToast("⚠️ 請輸入任務內容");
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/tasks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ project_name, priority, title })
+                });
+                if (res.status === 201) {
+                    document.getElementById("new-task-title").value = "";
+                    showToast("任務成功建立並同步至 Notion");
+                    await fetchAndSync看板();
+                } else {
+                    const errData = await res.json();
+                    alert("同步失敗原因: " + errData.detail);
+                }
+            } catch(e) {
+                showToast("❌ 無法連線至後端伺服器");
+            }
+        }
+
+        async function fetchAndSync看板() {
+            try {
+                const res = await fetch('/api/tasks');
+                if (!res.ok) return;
+                const tasks = await res.json();
+                
+                renderDatabaseTable(tasks);
+                
+                users.forEach(user => {
+                    const listDiv = document.getElementById(user.containerId);
+                    if (listDiv) {
+                        renderUserDashboard(user.name, listDiv, tasks);
+                    }
+                });
+            } catch(e) {
+                console.error("輪詢失敗:", e);
+            }
+        }
+
+        function renderUserDashboard(userName, listDiv, tasks) {
+            if (tasks.length === 0) {
+                listDiv.innerHTML = `<p class="text-center py-6 text-gray-300 text-xs">尚無任何任務</p>`;
+                return;
+            }
+
+            listDiv.innerHTML = tasks.map(task => {
+                const isClaimedByMe = task.assignee === userName;
+                const isClaimedByOther = task.assignee && task.assignee !== userName;
+                const isCompleted = task.is_completed === 1;
+
+                let borderCol = "border-l-gray-300";
+                if (isCompleted) borderCol = "border-l-gray-200";
+                else if (task.priority === 'High') borderCol = "border-l-rose-500";
+                else if (task.priority === 'Medium') borderCol = "border-l-amber-500";
+                else if (task.priority === 'Low') borderCol = "border-l-emerald-500";
+
+                return `
+                    <div class="bg-white border border-gray-200 ${borderCol} border-l-4 rounded-lg p-2.5 flex justify-between items-center shadow-sm text-xs ${isCompleted ? 'opacity-50 bg-gray-50/50' : ''}">
+                        <div class="flex-grow pr-2 min-w-0">
+                            <span class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">${escapeHtml(task.project_name)}</span>
+                            <h4 class="font-bold text-gray-800 truncate mt-0.5 ${isCompleted ? 'line-through text-gray-400' : ''}">${escapeHtml(task.title)}</h4>
+                        </div>
+                        <div>
+                            ${isCompleted ? `
+                                <span class="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 flex items-center gap-0.5">
+                                    <i class="fa-solid fa-check-double"></i> 已完成
+                                </span>
+                            ` : isClaimedByMe ? `
+                                <button onclick="completeTask(${task.task_id})" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 text-[10px] font-bold py-0.5 px-2 rounded shadow-sm">
+                                    ✓ 完成
+                                </button>
+                            ` : isClaimedByOther ? `
+                                <span class="text-[10px] text-gray-400 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
+                                    👤 ${escapeHtml(task.assignee)}
+                                </span>
+                            ` : `
+                                <button onclick="claimTask('${userName}', ${task.task_id})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold py-0.5 px-2.5 rounded shadow-sm">
+                                    認領
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderDatabaseTable(tasks) {
+            const tbody = document.getElementById("db-table-body");
+            if (!tbody) return;
+            
+            if (tasks.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-300">目前資料庫無任何記錄</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = tasks.map(row => {
+                const isCompleted = row.is_completed === 1;
+                return `
+                    <tr class="hover:bg-gray-50/50 transition-colors text-xs ${isCompleted ? 'bg-gray-50/50 opacity-70' : ''}">
+                        <td class="p-3 text-center border-r border-gray-100 text-indigo-600 font-bold">${row.task_id}</td>
+                        <td class="p-3 font-semibold text-gray-800 max-w-[120px] truncate ${isCompleted ? 'line-through text-gray-400' : ''}">${escapeHtml(row.project_name)}</td>
+                        <td class="p-3 text-gray-900 max-w-[200px] truncate ${isCompleted ? 'line-through text-gray-400' : ''}">${escapeHtml(row.title)}</td>
+                        <td class="p-3 text-center">
+                            ${isCompleted ? `
+                                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-400 border border-gray-200">Completed</span>
+                            ` : `
+                                <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                    row.priority === 'High' ? 'bg-rose-50 text-rose-600 border border-rose-100' :
+                                    row.priority === 'Medium' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                                    'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                }">${row.priority}</span>
+                            `}
+                        </td>
+                        <td class="p-3">
+                            ${row.assignee ? `<span class="text-emerald-600 font-bold">👤 ${escapeHtml(row.assignee)}</span>` : '<span class="text-gray-300 font-normal">NULL</span>'}
+                        </td>
+                        <td class="p-3 text-center">
+                            <div class="flex items-center justify-center gap-1.5">
+                                ${(!isCompleted && row.assignee) ? `
+                                    <button onclick="completeTask(${row.task_id})" class="text-gray-400 hover:text-emerald-600 p-1" title="標記完成">
+                                        <i class="fa-regular fa-square-check text-sm"></i>
+                                    </button>
+                                ` : ''}
+                                <button onclick="deleteTask(${row.task_id})" class="text-gray-400 hover:text-red-500 p-1" title="刪除任務">
+                                    <i class="fa-regular fa-trash-can text-sm"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function claimTask(assigneeName, taskId) {
+            try {
+                const res = await fetch(`/api/tasks/${taskId}/claim`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ assignee: assigneeName })
+                });
+
+                if (res.ok) {
+                    showToast(`👤 ${assigneeName} 認領成功並已同步`);
+                    await fetchAndSync看板();
+                } else if (res.status === 409) {
+                    document.getElementById("conflict-modal").classList.remove("hidden");
+                    document.getElementById("conflict-modal").classList.add("flex");
+                    await fetchAndSync看板();
+                } else {
+                    const errData = await res.json();
+                    alert("認領同步失敗原因: " + errData.detail);
+                }
+            } catch(e) {
+                showToast("❌ 連線失敗");
+            }
+        }
+
+        async function completeTask(taskId) {
+            try {
+                const res = await fetch(`/api/tasks/${taskId}/complete`, { method: 'PUT' });
+                if (res.ok) {
+                    showToast("✅ 任務標記完成並已通知 Notion");
+                    await fetchAndSync看板();
+                } else {
+                    const errData = await res.json();
+                    alert("完結同步失敗原因: " + errData.detail);
+                }
+            } catch(e) {}
+        }
+
+        async function deleteTask(taskId) {
+            try {
+                const res = await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
+                if (res.ok) {
+                    showToast("🗑️ 任務已自本地 SQLite 刪除");
+                    await fetchAndSync看板();
+                }
+            } catch(e) {}
+        }
+
+        function closeModal() {
+            document.getElementById("conflict-modal").classList.add("hidden");
+            document.getElementById("conflict-modal").classList.remove("flex");
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            document.getElementById("toast-msg").textContent = message;
+            toast.classList.remove("translate-y-20", "opacity-0");
+            setTimeout(() => {
+                toast.classList.add("translate-y-20", "opacity-0");
+            }, 2500);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // 生命週期自啟動修正
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchAndSync看板();
+            setInterval(fetchAndSync看板, 2000);
+        });
+    </script>
+</body>
+</html>
