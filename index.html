@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>區域網路任務協作平台</title>
+    <title>網路任務協作平台</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -26,13 +26,15 @@
                     <i class="fa-solid fa-network-wired text-sm text-white"></i>
                 </div>
                 <div>
-                    <h1 class="text-md font-bold tracking-wide text-gray-950">區域網路任務協作平台</h1>
-                    <p class="text-[10px] text-gray-400">實時同步待辦看板與並行認領鎖定防護</p>
+                    <h1 class="text-md font-bold tracking-wide text-gray-950">網路任務協作平台</h1>
+                    <p class="text-[10px] text-gray-400">計算機網路期末報告</p>
                 </div>
             </div>
-            <div class="flex items-center gap-2 text-[11px] text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full border border-gray-200 font-medium">
-                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                Notion 雲端數據橋接已就緒
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 text-[11px] text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full border border-gray-200 font-medium">
+                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                     連線成功
+                </div>
             </div>
         </div>
     </header>
@@ -107,7 +109,7 @@
                             <th class="p-3 font-semibold">任務名稱</th>
                             <th class="p-3 font-semibold text-center w-28">優先權 / 狀態</th>
                             <th class="p-3 font-semibold w-28">目前認領人</th>
-                            <th class="p-3 font-semibold text-center w-20">操作</th>
+                            <th class="p-3 font-semibold text-center w-28">操作 / 討論</th>
                         </tr>
                     </thead>
                     <tbody id="db-table-body" class="divide-y divide-gray-100 text-gray-600 font-mono">
@@ -145,7 +147,7 @@
     </div>
 
     <footer class="bg-white border-t border-gray-100 py-3 text-center text-[10px] text-gray-400">
-        區域網路任務協作平台 © 2026. 保持穩定 Polling。
+        計網期末報告
     </footer>
 
     <script>
@@ -154,6 +156,8 @@
             { containerId: 'tasks-container-lin2', name: '林宸煒' },
             { containerId: 'tasks-container-wang', name: '王祐宸' }
         ];
+
+        let openWindows = {};
 
         async function handleAddTask() {
             const project_name = document.getElementById("new-task-project").value.trim();
@@ -205,7 +209,7 @@
 
         function renderUserDashboard(userName, listDiv, tasks) {
             if (tasks.length === 0) {
-                listDiv.innerHTML = `<p class="text-center py-6 text-gray-300 text-xs">尚無任何任務</p>`;
+                listDiv.innerHTML = `<p class="text-center py-6 text-gray-300 text-xs">尚無 any 任務</p>`;
                 return;
             }
 
@@ -261,11 +265,12 @@
 
             tbody.innerHTML = tasks.map(row => {
                 const isCompleted = row.is_completed === 1;
+                const safeTitle = escapeHtml(row.title);
                 return `
                     <tr class="hover:bg-gray-50/50 transition-colors text-xs ${isCompleted ? 'bg-gray-50/50 opacity-70' : ''}">
                         <td class="p-3 text-center border-r border-gray-100 text-indigo-600 font-bold">${row.task_id}</td>
                         <td class="p-3 font-semibold text-gray-800 max-w-[120px] truncate ${isCompleted ? 'line-through text-gray-400' : ''}">${escapeHtml(row.project_name)}</td>
-                        <td class="p-3 text-gray-900 max-w-[200px] truncate ${isCompleted ? 'line-through text-gray-400' : ''}">${escapeHtml(row.title)}</td>
+                        <td class="p-3 text-gray-900 max-w-[200px] truncate ${isCompleted ? 'line-through text-gray-400' : ''}">${safeTitle}</td>
                         <td class="p-3 text-center">
                             ${isCompleted ? `
                                 <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-400 border border-gray-200">Completed</span>
@@ -281,13 +286,16 @@
                             ${row.assignee ? `<span class="text-emerald-600 font-bold">👤 ${escapeHtml(row.assignee)}</span>` : '<span class="text-gray-300 font-normal">NULL</span>'}
                         </td>
                         <td class="p-3 text-center">
-                            <div class="flex items-center justify-center gap-1.5">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="openCaseDiscussion(${row.task_id}, '${safeTitle}')" class="bg-gray-900 hover:bg-gray-800 text-white text-[10px] px-2 py-1 rounded shadow-sm flex items-center gap-1">
+                                    <i class="fa-regular fa-comment-dots"></i> 討論
+                                </button>
                                 ${(!isCompleted && row.assignee) ? `
-                                    <button onclick="completeTask(${row.task_id})" class="text-gray-400 hover:text-emerald-600 p-1" title="標記完成">
+                                    <button onclick="completeTask(${row.task_id})" class="text-gray-400 hover:text-emerald-600 p-1">
                                         <i class="fa-regular fa-square-check text-sm"></i>
                                     </button>
                                 ` : ''}
-                                <button onclick="deleteTask(${row.task_id})" class="text-gray-400 hover:text-red-500 p-1" title="刪除任務">
+                                <button onclick="deleteTask(${row.task_id})" class="text-gray-400 hover:text-red-500 p-1">
                                     <i class="fa-regular fa-trash-can text-sm"></i>
                                 </button>
                             </div>
@@ -312,13 +320,8 @@
                     document.getElementById("conflict-modal").classList.remove("hidden");
                     document.getElementById("conflict-modal").classList.add("flex");
                     await fetchAndSync看板();
-                } else {
-                    const errData = await res.json();
-                    alert("認領同步失敗原因: " + errData.detail);
                 }
-            } catch(e) {
-                showToast("❌ 連線失敗");
-            }
+            } catch(e) { showToast("❌ 連線失敗"); }
         }
 
         async function completeTask(taskId) {
@@ -327,9 +330,6 @@
                 if (res.ok) {
                     showToast("✅ 任務標記完成並已通知 Notion");
                     await fetchAndSync看板();
-                } else {
-                    const errData = await res.json();
-                    alert("完結同步失敗原因: " + errData.detail);
                 }
             } catch(e) {}
         }
@@ -362,7 +362,137 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        // 生命週期自啟動修正
+        // --- 🎯 終極修復：小窗與後端獨立的 discussions 表實現 task_id 強隔離通訊 ---
+        function openCaseDiscussion(taskId, taskTitle) {
+            // 用強整數 taskId 做視窗識別，保證多開視窗各自為政、絕不混淆
+            const winId = "TaskForum_" + taskId;
+            
+            if (openWindows[taskId] && !openWindows[taskId].closed) {
+                openWindows[taskId].focus();
+                return;
+            }
+
+            const discussionWindow = window.open("", winId, "width=430,height=620,scrollbars=yes,resizable=yes");
+            openWindows[taskId] = discussionWindow;
+            
+            discussionWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>案件討論 - ID ${taskId}</title>
+                    <script src="https://cdn.tailwindcss.com"><\/script>
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+                    <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background-color: #fafafa; }
+                    </style>
+                </head>
+                <body class="p-4 flex flex-col justify-between min-h-screen text-gray-800">
+                    <div>
+                        <div class="bg-white border border-gray-100 rounded-xl p-3.5 shadow-sm mb-4 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <div class="bg-indigo-100 text-indigo-600 p-2 rounded-lg"><i class="fa-regular fa-comment-dots text-sm"></i></div>
+                                <div class="min-w-0 max-w-[240px]">
+                                    <h1 class="text-xs font-bold text-gray-950 truncate">${taskTitle}</h1>
+                                    <p class="text-[9px] text-gray-400 font-mono">獨立關聯通道: ID-${taskId}</p>
+                                </div>
+                            </div>
+                            <span class="text-[9px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 animate-pulse font-bold">SQLite DB</span>
+                        </div>
+
+                        <div class="bg-white border border-gray-100 rounded-xl p-4 shadow-sm mb-4 space-y-3">
+                            <div class="flex gap-2">
+                                <div class="w-1/3">
+                                    <label class="block text-[10px] text-gray-400 mb-1">發表人</label>
+                                    <select id="forum-user" class="w-full bg-gray-50 border border-gray-100 rounded-lg px-2 py-1.5 text-xs font-medium">
+                                        <option value="林京緯">林京緯</option>
+                                        <option value="林宸煒">林宸煒</option>
+                                        <option value="王祐宸">王祐宸</option>
+                                    </select>
+                                </div>
+                                <div class="w-2/3">
+                                    <label class="block text-[10px] text-gray-400 mb-1">留言內容</label>
+                                    <input id="forum-content" type="text" placeholder="輸入訊息..." class="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-indigo-500">
+                                </div>
+                            </div>
+                            <button id="send-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold py-1.5 rounded-lg shadow-sm">發送留言</button>
+                        </div>
+
+                        <div class="bg-white border border-gray-100 rounded-xl p-4 shadow-sm overflow-y-auto max-h-[350px] space-y-3" id="chat-flow"></div>
+                    </div>
+                    <footer class="text-center text-[9px] text-gray-400 mt-4 font-mono">SQLite Realtime Table © 2026</footer>
+                </body>
+                </html>
+            `);
+            discussionWindow.document.close();
+
+            const doc = discussionWindow.document;
+            
+            doc.getElementById("send-btn").onclick = async () => {
+                const user_name = doc.getElementById("forum-user").value;
+                const content = doc.getElementById("forum-content").value.trim();
+                if (!content) return;
+
+                try {
+                    const res = await window.fetch('/api/discussions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        // 🎯 終極校準：欄位名稱精確與後端模型對齊，強制以 Number() 打包解除 422 格式警報
+                        body: JSON.stringify({ 
+                            task_id: Number(taskId), 
+                            user_name: user_name, 
+                            content: content 
+                        })
+                    });
+                    if (res.status === 201) {
+                        doc.getElementById("forum-content").value = "";
+                        updateFlow();
+                    }
+                } catch(e) { console.error(e); }
+            };
+
+            // 🎯 每 2 秒精確向本地獨立 discussions 表撈資料
+            async function updateFlow() {
+                try {
+                    const res = await window.fetch(`/api/discussions?task_id=${taskId}`);
+                    if (!res.ok) return;
+                    const messages = await res.json();
+                    const flowDiv = doc.getElementById("chat-flow");
+                    if (!flowDiv) return;
+
+                    if (messages.length === 0) {
+                        flowDiv.innerHTML = `<p class="text-center text-gray-300 py-8 text-xs">目前本案件尚無討論記錄</p>`;
+                        return;
+                    }
+
+                    flowDiv.innerHTML = messages.map(msg => {
+                        let nameColor = "bg-indigo-50 text-indigo-600 border-indigo-100";
+                        if (msg.user_name === "林宸煒") nameColor = "bg-amber-50 text-amber-600 border-amber-100";
+                        if (msg.user_name === "王祐宸") nameColor = "bg-emerald-50 text-emerald-600 border-emerald-100";
+                        
+                        const time = msg.created_at ? (msg.created_at.split(' ')[1] || msg.created_at) : "剛剛";
+
+                        return `
+                            <div class="border-b border-gray-50 pb-2 last:border-0 last:pb-0 font-mono">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold border ${nameColor}">👤 ${msg.user_name}</span>
+                                    <span class="text-[9px] text-gray-400 bg-gray-100 px-1.5 rounded">${time}</span>
+                                </div>
+                                <p class="text-xs text-gray-800 bg-gray-50/70 p-2 rounded-lg mt-0.5 border border-gray-50 break-all">${msg.content}</p>
+                            </div>
+                        `;
+                    }).join('');
+                } catch(e) { console.error(e); }
+            }
+
+            updateFlow();
+            const timer = discussionWindow.setInterval(updateFlow, 2000);
+
+            discussionWindow.onbeforeunload = () => {
+                discussionWindow.clearInterval(timer);
+            };
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             fetchAndSync看板();
             setInterval(fetchAndSync看板, 2000);
